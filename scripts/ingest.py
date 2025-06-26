@@ -2,7 +2,8 @@ import duckdb
 from pathlib import Path
 
 # Connect to DuckDB database file (creates if not exists)
-con = duckdb.connect("../diet.db")
+con = duckdb.connect("diet.db")
+print("Connected to diet.db")
 con.execute("PRAGMA threads=8;")  # tweak to utilize all cores
 
 # Create empty tables if they don't exist
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS comments (
 """)
 
 # Ingest submissions (posts)
-for path in Path("../raw").glob("*_submissions.zst"):
+for path in Path("./raw").glob("*_submissions.zst"):
     print(f"Loading posts from {path.name}...")
     con.execute(f"""
     INSERT INTO posts
@@ -43,7 +44,7 @@ for path in Path("../raw").glob("*_submissions.zst"):
     """)
 
 # Ingest top-level comments
-for path in Path("../raw").glob("*_comments.zst"):
+for path in Path("./raw").glob("*_comments.zst"):
     print(f"Loading comments from {path.name} (top-level only)...")
     con.execute(f"""
     INSERT INTO comments

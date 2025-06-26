@@ -1,7 +1,7 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-ds = load_dataset("parquet", data_files="../exports/train.parquet", split="train")
+ds = load_dataset("parquet", data_files="./exports/train.parquet", split="train")
 
 tok = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
 clf = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment", tokenizer=tok, device=0)
