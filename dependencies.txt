@@ -1,0 +1,9 @@
+duckdb[python]
+pandas
+transformers
+datasets
+zstandard
+tqdm
+polars
+pyarrow
+vaderSentiment
