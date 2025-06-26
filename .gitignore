@@ -1,0 +1,4 @@
+*.db
+raw/*
+exports/*
+*.log
