@@ -29,7 +29,7 @@ def load_and_flatten_label_studio_data(json_file_path):
     return df
 
 # Load data using the new function
-df = load_and_flatten_label_studio_data('/Users/sashi/Desktop/Courses/4th Year/Summer 2025/SENG474/diet_project/scripts/labeled_keto_data.json')
+df = load_and_flatten_label_studio_data('./scripts/labeled_keto_data.json')
 
 # Map string labels to numerical values for model training
 # This mapping must be consistent with your target_names in classification_report
@@ -57,7 +57,7 @@ X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
 
 # 5. Train the model
-model = LogisticRegression(max_iter=1000)
+model = LogisticRegression(max_iter=1000, class_weight='balanced')  # Use balanced class weights to handle class imbalance
 model.fit(X_train_vec, y_train)
 
 # 6. Evaluate the model
