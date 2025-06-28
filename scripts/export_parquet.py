@@ -2,7 +2,7 @@ import duckdb
 from pathlib import Path
 
 # Connect to DuckDB database
-con = duckdb.connect("../diet.db")
+con = duckdb.connect("diet.db")
 con.execute("PRAGMA threads=8;")  # tweak to utilize all cores
 
 # Create exports directory if it doesn't exist
