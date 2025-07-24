@@ -29,7 +29,7 @@ def load_and_flatten_label_studio_data(json_file_path):
     return df
 
 # Load data using the new function
-df = load_and_flatten_label_studio_data('./scripts/labeled_keto_data.json')
+df = load_and_flatten_label_studio_data('labeled_keto_data.json')
 
 # Map string labels to numerical values for model training
 # This mapping must be consistent with your target_names in classification_report
@@ -79,3 +79,15 @@ print("Classification Report:\n", classification_report(y_test, y_pred, target_n
 
 # # Example usage:
 # print(predict_tone("I feel awful after eating carbs again."))
+
+
+# ***Confusion matrix part***
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['positive', 'neutral', 'negative', 'offtopic'])
+disp.plot(cmap=plt.cm.Blues)
+plt.title("Confusion Matrix")
+plt.show() 
