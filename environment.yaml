@@ -1,0 +1,52 @@
+# Conda Environemnt yaml for diet-project
+# To create the environment use conda env create -f <PATH_TO_YAML> after setting up your python path 
+# Instructions copy the environment.yaml file to your project directory. Then rename it to my_environment.yaml and edit the 
+# environment variables as needed.
+# Lastly run the command below in your terminal
+# conda env create -f my_environment.yaml
+# This assumes you have conda installed and the conda command is available in your terminal.
+name: diet_env
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - ipykernel
+  - duckdb
+  - pandas
+  - zstandard
+  - tqdm
+  - numpy>=1.21
+  - polars
+  - pyarrow
+  - scikit-learn
+  - vaderSentiment
+  - seaborn
+  - matplotlib
+  - tensorflow
+  - pytorch #>=2.0
+  - accelerate>=0.26.0
+  - pip
+  - pip:
+      - transformers==4.54.1
+      - datasets
+      - tf-keras
+
+
+
+variables:
+
+  #  If using windows
+  # PYTHONPATH: <PATH_TO_DIET_PROJECT>\scripts\<PATH_TO_DIET_PROJECT>\notebooks
+  # DATASETDIRPATH: <PATH_TO_DIET_PROJECT>\notebooks\datasets
+
+
+  
+  # If using Linux:
+  
+  # PYTHONPATH: <PATH_TO_DIET_PROJECT>/scripts:<PATH_TO_DIET_PROJECT>/notebooks
+  # DATASETPATH: <PATH_TO_DIET_PROJECT>/notebooks/datasets
+  
+

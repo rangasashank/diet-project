@@ -1,0 +1,4 @@
+This is where you should put the raw ndjson files from a subreddit dump that you're interested in coverting to a sentiment/topic format
+
+When you run simple_balance_sentiment.py and specify how many posts you want per sentiment and and output directory all the files in here will be processed and stratified sampled. A resulting json file will be put inside where you specified with the aforementioned script. By default this is in 
+notebooks/datasets
