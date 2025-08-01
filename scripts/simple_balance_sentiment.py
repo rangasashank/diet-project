@@ -623,7 +623,7 @@ USAGE EXAMPLES:
     # Process files from raw directory
     # Get base path from environment configuration
     base_path = get_dataset_path()
-    raw_dir = os.path.join(base_path, "raw_output")
+    raw_dir = os.path.join(base_path, "raw")
     
     # Set output directory - use DATASETDIRPATH if not specified
     if args.output_dir is None:
@@ -654,7 +654,160 @@ USAGE EXAMPLES:
     print(f"Random seed: {args.random_seed}")
     
     results = {}
+    
+    # Group plant-based files for combined processing
+    plant_based_files = []
+    other_files = []
+    
     for filename in files_to_process:
+        # Skip comment files when include_comments is True (we'll process them with submissions)
+        if include_comments and filename.endswith('_comments_out'):
+            continue
+            
+        # Group plant-based diet files together
+        if any(plant_sub in filename.lower() for plant_sub in ['plantbaseddiet', 'vegan', 'vegetarian']):
+            plant_based_files.append(filename)
+        else:
+            other_files.append(filename)
+    
+    # Process plant-based files as a combined group
+    if plant_based_files:
+        print(f"\n{'='*50}")
+        print(f"Processing COMBINED PLANT-BASED FILES:")
+        for pf in plant_based_files:
+            print(f"  - {pf}")
+        print(f"{'='*50}")
+        
+        # Combine all plant-based files into temporary combined files
+        combined_posts = []
+        combined_comments = []
+        files_found = 0
+        files_processed = 0
+        
+        for filename in plant_based_files:
+            input_path = os.path.join(raw_dir, filename)
+            if os.path.exists(input_path):
+                files_found += 1
+                print(f"Reading {filename}...")
+                
+                # Read posts from this file
+                posts_from_file = 0
+                try:
+                    with open(input_path, 'r', encoding='utf-8') as f:
+                        for line_num, line in enumerate(f, 1):
+                            try:
+                                post = json.loads(line.strip())
+                                combined_posts.append(post)
+                                posts_from_file += 1
+                            except Exception as e:
+                                continue
+                    
+                    if posts_from_file > 0:
+                        files_processed += 1
+                        print(f"  → Read {posts_from_file:,} posts from {filename}")
+                    else:
+                        print(f"  → Warning: No valid posts found in {filename}")
+                        
+                except Exception as e:
+                    print(f"  → Error reading {filename}: {e}")
+                
+                # Read corresponding comments if needed
+                if include_comments and filename.endswith('_submissions'):
+                    comments_filename = filename.replace('_submissions', '_comments')
+                    comments_path = os.path.join(raw_dir, comments_filename)
+                    if os.path.exists(comments_path):
+                        print(f"Reading comments from {comments_filename}...")
+                        comments_from_file = 0
+                        try:
+                            with open(comments_path, 'r', encoding='utf-8') as f:
+                                for line_num, line in enumerate(f, 1):
+                                    try:
+                                        comment = json.loads(line.strip())
+                                        combined_comments.append(comment)
+                                        comments_from_file += 1
+                                    except Exception as e:
+                                        continue
+                            
+                            if comments_from_file > 0:
+                                print(f"  → Read {comments_from_file:,} comments from {comments_filename}")
+                            else:
+                                print(f"  → Warning: No valid comments found in {comments_filename}")
+                                
+                        except Exception as e:
+                            print(f"  → Error reading {comments_filename}: {e}")
+                    else:
+                        print(f"  → Comments file not found: {comments_filename}")
+            else:
+                print(f"  → File not found: {filename}")
+        
+        print(f"\nCombination Summary:")
+        print(f"  Files available: {files_found}/{len(plant_based_files)}")
+        print(f"  Files with data: {files_processed}/{len(plant_based_files)}")
+        print(f"  Combined posts: {len(combined_posts):,}")
+        if include_comments:
+            print(f"  Combined comments: {len(combined_comments):,}")
+        
+        # Check if we have enough data to proceed
+        if len(combined_posts) == 0:
+            print(f"⚠️  Warning: No posts found in any plant-based files. Skipping combined processing.")
+            results["plantbaseddiet_combined"] = 0
+        elif files_processed == 0:
+            print(f"⚠️  Warning: No plant-based files contained valid data. Skipping combined processing.")
+            results["plantbaseddiet_combined"] = 0
+        else:
+            print(f"✓ Proceeding with combined plant-based processing...")
+            
+            # Create temporary combined files
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_combined_posts.ndjson', encoding='utf-8') as temp_posts_file:
+                temp_posts_path = temp_posts_file.name
+                for post in combined_posts:
+                    json.dump(post, temp_posts_file, ensure_ascii=False)
+                    temp_posts_file.write('\n')
+            
+            temp_comments_path = None
+            if include_comments and combined_comments:
+                with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_combined_comments.ndjson', encoding='utf-8') as temp_comments_file:
+                    temp_comments_path = temp_comments_file.name
+                    for comment in combined_comments:
+                        json.dump(comment, temp_comments_file, ensure_ascii=False)
+                        temp_comments_file.write('\n')
+            
+            # Process the combined plant-based file
+            output_path = os.path.join(output_dir, "plantbaseddiet_combined_balanced.ndjson")
+            try:
+                count = balance_reddit_sentiment(
+                    input_file=temp_posts_path,
+                    output_file=output_path,
+                    target_per_sentiment=args.target_per_sentiment,
+                    random_seed=args.random_seed,
+                    include_comments=include_comments,
+                    comments_file=temp_comments_path
+                )
+                results["plantbaseddiet_combined"] = count
+                print(f"✓ Completed combined plant-based: {count:,} balanced objects saved")
+            except Exception as e:
+                print(f"✗ Error processing combined plant-based files: {e}")
+                results["plantbaseddiet_combined"] = 0
+            finally:
+                # Clean up temporary files
+                try:
+                    import os
+                    if os.path.exists(temp_posts_path):
+                        os.remove(temp_posts_path)
+                    if temp_comments_path and os.path.exists(temp_comments_path):
+                        os.remove(temp_comments_path)
+                except:
+                    pass
+    else:
+        print(f"\n{'='*50}")
+        print(f"No plant-based files found for combination.")
+        print(f"Looking for files containing: plantbaseddiet, vegan, vegetarian")
+        print(f"{'='*50}")
+        results["plantbaseddiet_combined"] = 0
+    
+    # Process other files individually
+    for filename in other_files:
         # Skip comment files when include_comments is True (we'll process them with submissions)
         if include_comments and filename.endswith('_comments_out'):
             continue
@@ -664,8 +817,8 @@ USAGE EXAMPLES:
         
         # Determine corresponding comments file
         comments_file = None
-        if include_comments and filename.endswith('_submissions_out'):
-            comments_filename = filename.replace('_submissions_out', '_comments_out')
+        if include_comments and filename.endswith('_submissions'):
+            comments_filename = filename.replace('_submissions', '_comments')
             comments_path = os.path.join(raw_dir, comments_filename)
             if os.path.exists(comments_path):
                 comments_file = comments_path
@@ -693,6 +846,7 @@ USAGE EXAMPLES:
         else:
             print(f"✗ File not found: {input_path}")
             results[filename] = 0
+    
     
     # Summary
     print(f"\n{'='*50}")

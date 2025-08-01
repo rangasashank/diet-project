@@ -1,4 +1,23 @@
 *.db
 raw/*
+raw_output/*
 exports/*
 *.log
+notebook/dataset/results
+notebook/dataset/results_diet
+notebook/dataset/results_general
+# Large model checkpoint directories
+notebooks/results/
+notebooks/results_diet/
+notebooks/results_general/
+# Cache and temporary files
+scripts/__pycache__/
+*/__pycache__/
+*.pyc
+*.pyo
+# Test output directories
+test_output_small/
+scripts/test_output_small/
+test_topic_corrections/
+# Temporary scripts
+test_script.bat
