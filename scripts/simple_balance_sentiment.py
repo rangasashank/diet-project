@@ -11,7 +11,7 @@ import argparse
 import os
 import tempfile
 from config import get_random_state
-from env_utils import get_dataset_path
+from env_utils import get_dataset_path, get_project_root
 
 def classify_topic(subreddit):
     """
@@ -375,7 +375,7 @@ def collect_top_comments_as_separate_objects(posts, comments_file):
     
     return final_objects
 
-def balance_reddit_sentiment(input_file, output_file, target_per_sentiment=1000, random_seed=42, include_comments=False, comments_file=None):
+def balance_reddit_sentiment(input_file, output_file, target_per_sentiment=1000, random_seed=get_random_state(), include_comments=False, comments_file=None):
     """
     Balance sentiment distribution in Reddit NDJSON file using memory-efficient approach.
     
@@ -622,12 +622,15 @@ USAGE EXAMPLES:
     
     # Process files from raw directory
     # Get base path from environment configuration
-    base_path = get_dataset_path()
-    raw_dir = os.path.join(base_path, "raw")
+    base_path = get_dataset_path()  # This now returns notebooks/datasets
+    project_root = get_project_root()  # This returns the project root
+    raw_dir = os.path.join(project_root, "raw")
     
     # Set output directory - use DATASETDIRPATH if not specified
+    print(f"OUTPUT DIR: {args.output_dir}")
     if args.output_dir is None:
-        output_dir = base_path  # Use DATASETDIRPATH as default
+        output_dir = base_path  # Use notebooks/datasets as default
+        print(f"DATASET PATH {base_path} will be used as output directory")
     else:
         output_dir = args.output_dir
     
